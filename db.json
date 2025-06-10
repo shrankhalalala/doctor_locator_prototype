@@ -1,0 +1,63 @@
+{
+  "doctors": [
+    {
+      "id": "doc1",
+      "name": "Dr. Smith",
+      "specialty": "Cardiology",
+      "position": {
+        "x": 160.31098698189595,
+        "y": 204.97817694028316,
+        "floor": 1
+      }
+    },
+    {
+      "id": "doc2",
+      "name": "Dr. Johnson",
+      "specialty": "Pediatrics",
+      "position": {
+        "x": 288.76522336154335,
+        "y": 278.198575045692,
+        "floor": 2
+      }
+    }
+  ],
+  "beacons": [
+    {
+      "id": "reception",
+      "name": "Reception",
+      "position": {
+        "x": 100,
+        "y": 100,
+        "floor": 1
+      }
+    },
+    {
+      "id": "pharmacy",
+      "name": "Pharmacy",
+      "position": {
+        "x": 250,
+        "y": 400,
+        "floor": 1
+      }
+    },
+    {
+      "id": "icu",
+      "name": "ICU",
+      "position": {
+        "x": 600,
+        "y": 80,
+        "floor": 1
+      }
+    },
+    {
+      "id": "radiology",
+      "name": "Radiology",
+      "position": {
+        "x": 100,
+        "y": 100,
+        "floor": 2
+      }
+    }
+  ],
+  "patients": []
+}

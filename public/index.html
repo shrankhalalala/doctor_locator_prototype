@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hospital Doctor Locator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #4361ee;
+      --secondary: #3f37c9;
+      --accent: #4895ef;
+      --dark: #1b263b;
+      --light: #f8f9fa;
+      --success: #4cc9f0;
+      --warning: #f72585;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background-color: #f5f7fa;
+      color: var(--dark);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #e1e5ee;
+    }
+
+    h1 {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .controls {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      margin-bottom: 2rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    button,
+    select,
+    input[type='text'] {
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      padding: 0.6rem 1rem;
+      font-size: 0.9rem;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      background-color: var(--secondary);
+      color: white;
+      transform: scale(1.02);
+    }
+
+    .map-container {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    #map {
+      width: 700px;
+      height: 500px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .doctor-marker {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      position: absolute;
+      transform: translate(-50%, -50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 12px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s;
+    }
+
+    .doctor-marker:hover {
+      transform: translate(-50%, -50%) scale(1.2);
+      z-index: 100;
+    }
+
+    .beacon-marker {
+      width: 8px;
+      height: 8px;
+      background-color: var(--warning);
+      border-radius: 50%;
+      position: absolute;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+    }
+
+    .beacon-marker::after {
+      content: attr(data-name);
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--warning);
+      font-size: 0.75rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease-in-out;
+      z-index: 10;
+    }
+
+    .beacon-marker:hover::after {
+      opacity: 1;
+    }
+
+    .doctor-info {
+      flex: 1;
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+    }
+
+    .doctor-card {
+      background: var(--light);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      border-left: 4px solid var(--accent);
+    }
+
+    .doctor-card h3 {
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .specialty {
+      display: inline-block;
+      background: var(--accent);
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+    }
+
+    .location-info {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .floor-selector {
+      margin-top: 0.5rem;
+    }
+
+    .floor-selector button {
+      margin-right: 0.5rem;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.8rem;
+      border: 1px solid #ccc;
+    }
+
+    .active-floor {
+      background-color: var(--secondary);
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      .map-container {
+        flex-direction: column;
+      }
+
+      #map {
+        width: 100%;
+        height: 400px;
+      }
+
+      .doctor-info {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>Hospital Doctor Locator</h1>
+      <div class="hospital-info">
+        <p id="current-time"></p>
+      </div>
+    </header>
+
+    <div class="controls">
+      <select id="doctorSelect">
+        <option value="">Select a doctor to track</option>
+      </select>
+      <button id="simulate">Simulate Movement</button>
+      <label>
+        <input type="checkbox" id="trackAll" />
+        Track All Doctors
+      </label>
+      <input type="text" id="searchSpecialty" placeholder="Search specialty..." />
+      <div class="floor-selector">
+        <button class="floor-btn active-floor" data-floor="1">Floor 1</button>
+        <button class="floor-btn" data-floor="2">Floor 2</button>
+      </div>
+    </div>
+
+    <div class="map-container">
+      <div id="map"></div>
+      <div class="doctor-info">
+        <h2>Doctor Information</h2>
+        <div id="selectedDoctorInfo">
+          <p>Select a doctor to see more info</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const map = document.getElementById('map');
+    let doctors = [];
+    let beacons = [];
+    let selectedDoctor = null;
+    let currentFloor = 1;
+    let simulationInterval = null;
+    const angles = {};
+    const colors = ['#4361ee', '#4895ef', '#4cc9f0', '#3f37c9', '#560bad', '#b5179e', '#f72585', '#7209b7'];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      updateTime();
+      setInterval(updateTime, 60000);
+
+      fetch('/api/doctors').then(r => r.json()).then(data => {
+        doctors = data;
+        renderDoctors();
+        populateDoctorSelect();
+      });
+
+      fetch('/api/beacons').then(r => r.json()).then(data => {
+        beacons = data;
+        renderBeacons();
+      });
+
+      document.querySelectorAll('.floor-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.floor-btn').forEach(b => b.classList.remove('active-floor'));
+          btn.classList.add('active-floor');
+          currentFloor = parseInt(btn.dataset.floor);
+          renderDoctors();
+          renderBeacons();
+        });
+      });
+    });
+
+    socket.on('positionUpdate', data => {
+      if (data.type === 'doctor') {
+        const doctor = doctors.find(d => d.id === data.id);
+        if (doctor) {
+          doctor.position = data.position;
+          renderDoctors();
+          if (selectedDoctor && selectedDoctor.id === data.id) {
+            updateDoctorInfo(doctor);
+          }
+        }
+      }
+    });
+
+    document.getElementById('simulate').addEventListener('click', () => {
+      if (simulationInterval) {
+        clearInterval(simulationInterval);
+        simulationInterval = null;
+        document.getElementById('simulate').textContent = 'Simulate Movement';
+      } else {
+        simulationInterval = setInterval(() => {
+          doctors.forEach((doctor, index) => {
+            const baseX = 200 + index * 150;
+            const baseY = 200 + (index % 2) * 100;
+            const radius = 40 + (index * 25);
+            const speed = 0.1 + (index * 0.05);
+            angles[doctor.id] = (angles[doctor.id] || 0) + speed;
+            const newPos = {
+              x: baseX + radius * Math.cos(angles[doctor.id]),
+              y: baseY + radius * Math.sin(angles[doctor.id]),
+              floor: doctor.position.floor
+            };
+            socket.emit('updatePosition', {
+              type: 'doctor',
+              id: doctor.id,
+              position: newPos
+            });
+          });
+        }, 1000);
+        document.getElementById('simulate').textContent = 'Stop Simulation';
+      }
+    });
+
+    document.getElementById('trackAll').addEventListener('change', e => {
+      if (e.target.checked) {
+        selectedDoctor = null;
+        document.getElementById('doctorSelect').value = '';
+        document.getElementById('selectedDoctorInfo').innerHTML = '<p>Select a doctor to see more info</p>';
+      }
+    });
+
+    document.getElementById('searchSpecialty').addEventListener('input', e => {
+      const value = e.target.value.toLowerCase();
+      const select = document.getElementById('doctorSelect');
+      select.innerHTML = '<option value="">Select a doctor to track</option>';
+      doctors
+        .filter(doc => doc.specialty.toLowerCase().includes(value))
+        .forEach(doctor => {
+          const option = document.createElement('option');
+          option.value = doctor.id;
+          option.textContent = `${doctor.name} (${doctor.specialty})`;
+          select.appendChild(option);
+        });
+    });
+
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('current-time').textContent = now.toLocaleTimeString() + ' | ' + now.toLocaleDateString();
+    }
+
+    function populateDoctorSelect() {
+      const select = document.getElementById('doctorSelect');
+      doctors.forEach((doctor, index) => {
+        const option = document.createElement('option');
+        option.value = doctor.id;
+        option.textContent = `${doctor.name} (${doctor.specialty})`;
+        select.appendChild(option);
+      });
+      select.addEventListener('change', e => {
+        selectedDoctor = doctors.find(d => d.id === e.target.value);
+        if (selectedDoctor) {
+          updateDoctorInfo(selectedDoctor);
+          highlightDoctor(selectedDoctor.id);
+        }
+      });
+    }
+
+    function renderDoctors() {
+      document.querySelectorAll('.doctor-marker').forEach(el => el.remove());
+      doctors.forEach((doctor, index) => {
+        if (doctor.position.floor !== currentFloor) return;
+
+        const el = document.createElement('div');
+        el.className = 'doctor-marker';
+        el.id = `doctor-${doctor.id}`;
+        el.style.left = `${doctor.position.x}px`;
+        el.style.top = `${doctor.position.y}px`;
+        el.style.backgroundColor = colors[index % colors.length];
+        el.textContent = doctor.name.split(' ').map(n => n[0]).join('');
+        el.title = `${doctor.name} (${doctor.specialty})`;
+
+        el.addEventListener('click', () => {
+          document.getElementById('doctorSelect').value = doctor.id;
+          selectedDoctor = doctor;
+          updateDoctorInfo(doctor);
+          highlightDoctor(doctor.id);
+        });
+
+        map.appendChild(el);
+      });
+    }
+
+    function highlightDoctor(doctorId) {
+      document.querySelectorAll('.doctor-marker').forEach(marker => {
+        marker.style.transform =
+          marker.id === `doctor-${doctorId}` ? 'translate(-50%, -50%) scale(1.3)' : 'translate(-50%, -50%)';
+        marker.style.zIndex = marker.id === `doctor-${doctorId}` ? '100' : '1';
+      });
+    }
+
+    function renderBeacons() {
+      document.querySelectorAll('.beacon-marker').forEach(el => el.remove());
+
+      beacons.forEach(beacon => {
+        if (beacon.position.floor !== currentFloor) return;
+
+        const dot = document.createElement('div');
+        dot.className = 'beacon-marker';
+        dot.style.left = `${beacon.position.x}px`;
+        dot.style.top = `${beacon.position.y}px`;
+        dot.setAttribute('data-name', beacon.name);
+        map.appendChild(dot);
+      });
+    }
+
+    function updateDoctorInfo(doctor) {
+      const infoDiv = document.getElementById('selectedDoctorInfo');
+      infoDiv.innerHTML = `
+        <div class="doctor-card">
+          <h3>${doctor.name}</h3>
+          <p>${doctor.specialty}</p>
+          <span class="specialty">${doctor.specialty}</span>
+          <div class="location-info">
+            <p><strong>Current Location:</strong></p>
+            <p>Floor ${doctor.position.floor}</p>
+            <p>Section ${getSection(doctor.position)}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    function getSection(position) {
+      if (position.x < 200 && position.y < 200) return 'A (West Wing)';
+      if (position.x >= 200 && position.y < 200) return 'B (North Wing)';
+      if (position.x < 200 && position.y >= 200) return 'C (South Wing)';
+      return 'D (East Wing)';
+    }
+  </script>
+</body>
+
+</html>
