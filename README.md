@@ -1,3 +1,5 @@
+<img width="1710" alt="image" src="https://github.com/user-attachments/assets/ba9135a7-9805-4014-9523-5ce9ca8b931e" />
+
 # 🏥 Hospital Doctor Locator
 
 A web-based system to visually **track doctors** inside a hospital building in real time, with features like **floor-wise views**, **search by specialty**, and **hoverable beacon points** for major hospital locations (e.g., Reception, ICU, Pharmacy).
